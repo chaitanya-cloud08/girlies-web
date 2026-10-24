@@ -3,6 +3,8 @@ export type ChoiceFlag = "kept_secret" | "lent_scarf";
 export type Choice = {
   id: string;
   label: string;
+  /** What Jasbir says or does, shown right after she picks it. */
+  reply: string;
   spark?: number;
   self?: number;
   flag?: ChoiceFlag;
@@ -13,6 +15,8 @@ export type Scene = {
   heading: string;
   location: string;
   dialogue: string[];
+  /** The question Jasbir is answering. Shown right above the choices. */
+  prompt: string;
   choices: Choice[];
 };
 
@@ -26,10 +30,26 @@ export const SCENES: Scene[] = [
       "Kabir. Grey hoodie, top of the batch, already looking insufferably pleased with himself.",
       `"Is that a crochet keychain? Bold," he says, nodding at your bag.`,
     ],
+    prompt: "He's waiting for a reaction. What do you say?",
     choices: [
-      { id: "roast", label: "Roast him", spark: 2 },
-      { id: "smile", label: "Sunshine smile", self: 2 },
-      { id: "ignore", label: "Pretend he doesn't exist", self: 1 },
+      {
+        id: "roast",
+        label: "Roast him",
+        spark: 2,
+        reply: `"Bold? Says the guy who's worn the same hoodie since orientation started." Kabir blinks. "...Okay. Noted."`,
+      },
+      {
+        id: "smile",
+        label: "Sunshine smile + “I made it myself”",
+        self: 2,
+        reply: `You smile, a little too brightly, and show him the keychain properly. Kabir actually looks thrown. "...Cool. Sure."`,
+      },
+      {
+        id: "ignore",
+        label: "Pretend he doesn't exist",
+        self: 1,
+        reply: "You turn back to the board without a word. He watches you go a beat too long.",
+      },
     ],
   },
   {
@@ -39,12 +59,29 @@ export const SCENES: Scene[] = [
     dialogue: [
       "Your phone buzzes. It's Chaitanya.",
       `Chaitanya: "26 WHO is the hoodie guy and why is he looking at you"`,
-      "You have approximately four seconds to decide how much you're about to lie.",
+      "You have about four seconds to decide how much you're about to lie.",
     ],
+    prompt: "Reply to Chaitanya:",
     choices: [
-      { id: "nobody", label: '"Nobody 🙄"', self: 2 },
-      { id: "nemesis", label: '"My nemesis"', spark: 1, self: 1 },
-      { id: "cute", label: '"…he\'s kinda cute ok"', spark: 3 },
+      {
+        id: "nobody",
+        label: '"Nobody 🙄"',
+        self: 2,
+        reply: `Chaitanya: "A nobody who stared at you for four minutes? Sure, Jan."`,
+      },
+      {
+        id: "nemesis",
+        label: '"My nemesis."',
+        spark: 1,
+        self: 1,
+        reply: `Chaitanya: "Nemeses don't blush like that, babe. I'm calling it."`,
+      },
+      {
+        id: "cute",
+        label: '"…he\'s kinda cute ok"',
+        spark: 3,
+        reply: `Chaitanya: "I KNEW IT. Tell me everything. Now."`,
+      },
     ],
   },
   {
@@ -54,12 +91,30 @@ export const SCENES: Scene[] = [
     dialogue: [
       "You're hunting for a case study reference when you spot him — Kabir, hunched over a thick finance textbook.",
       "Except the textbook's propped open on something considerably more dog-eared underneath, and the cover peeking out is definitely not about discounted cash flow.",
-      "He freezes mid-page-turn.",
+      "He freezes mid-page-turn, staring at you.",
     ],
+    prompt: "You've caught him. What do you do?",
     choices: [
-      { id: "expose", label: "Expose him", spark: 1, self: 1 },
-      { id: "secret", label: "Keep his secret", spark: 2, flag: "kept_secret" },
-      { id: "recommend", label: "Recommend a better one", spark: 3 },
+      {
+        id: "expose",
+        label: "Expose him, loudly",
+        spark: 1,
+        self: 1,
+        reply: `You announce it at full volume. Heads turn. Kabir slams the book shut: "Please. Keep your voice down, Overachiever."`,
+      },
+      {
+        id: "secret",
+        label: "Keep his secret and slip away",
+        spark: 2,
+        flag: "kept_secret",
+        reply: `You pretend you saw nothing and quietly move on. Kabir catches your eye across the shelves and mouths "thank you."`,
+      },
+      {
+        id: "recommend",
+        label: "Slide over a better one",
+        spark: 3,
+        reply: `You pull a copy of the enemies-to-lovers classic off the shelf and set it on his table. He stares at the cover. "...You read these?"`,
+      },
     ],
   },
   {
@@ -67,14 +122,30 @@ export const SCENES: Scene[] = [
     heading: "Fit Check 👗",
     location: "Outside the seminar hall",
     dialogue: [
-      "He looks up as you walk in, actually looks — not the usual smirk.",
+      "He looks up as you walk in. Actually looks, not the usual smirk.",
       `"You look… prepared," he says, like the word cost him something.`,
       "From Kabir, that might be a five-alarm compliment.",
     ],
+    prompt: "He's just complimented you. How do you reply?",
     choices: [
-      { id: "fitcheckhim", label: "Fit-check him back", spark: 2 },
-      { id: "compliment", label: "Take it as a compliment", self: 2 },
-      { id: "tenoften", label: '"Prepared?? It\'s a 10/10"', self: 3 },
+      {
+        id: "fitcheckhim",
+        label: "Fit-check him back",
+        spark: 2,
+        reply: `"You look like you slept in that hoodie." Kabir glances down at himself, offended. "It's vintage."`,
+      },
+      {
+        id: "compliment",
+        label: "Say a simple thank you",
+        self: 2,
+        reply: `"Thanks." You don't add anything. He nods like that's the most he's going to get today.`,
+      },
+      {
+        id: "tenoften",
+        label: `"Prepared?? It's a 10/10 fit."`,
+        self: 3,
+        reply: `Kabir fails to hide a smile. "Fine. 10/10. Don't make it weird."`,
+      },
     ],
   },
   {
@@ -83,12 +154,29 @@ export const SCENES: Scene[] = [
     location: "Outside the lecture hall, no warning whatsoever",
     dialogue: [
       "The sky opens up without so much as a courtesy drizzle first.",
-      "You have one umbrella. He has none, and is currently staring at the downpour like it personally wronged him.",
+      "You have one umbrella. He has none, and is staring at the downpour like it personally wronged him.",
     ],
+    prompt: "One umbrella, two people. What now?",
     choices: [
-      { id: "share", label: "Share it", spark: 3 },
-      { id: "run", label: "Make a run for it", self: 2 },
-      { id: "scarf", label: "Lend him your crochet scarf", spark: 2, flag: "lent_scarf" },
+      {
+        id: "share",
+        label: "Share the umbrella",
+        spark: 3,
+        reply: `You hold it over both of you. He mutters "This is so not necessary" and stays right under it.`,
+      },
+      {
+        id: "run",
+        label: "Make a run for it",
+        self: 2,
+        reply: "You sprint for the bus stop. Kabir is somehow still soaked, and still smirking.",
+      },
+      {
+        id: "scarf",
+        label: "Wrap him in your crochet scarf",
+        spark: 2,
+        flag: "lent_scarf",
+        reply: `You loop the scarf around his neck. "It's warm," he says, quieter than before. "Are you sure?"`,
+      },
     ],
   },
   {
@@ -99,10 +187,27 @@ export const SCENES: Scene[] = [
       "The projector flickers. Your slides — forty hours of work — crash mid-transition.",
       "The judges are watching. Kabir's already reaching for his laptop.",
     ],
+    prompt: "Your slides are gone. What's your move?",
     choices: [
-      { id: "shesaves", label: "She saves it", self: 3 },
-      { id: "hesaves", label: "He saves it", spark: 1 },
-      { id: "together", label: "They save it together", spark: 2, self: 1 },
+      {
+        id: "shesaves",
+        label: "Restart and narrate the charts from memory",
+        self: 3,
+        reply: "You walk the judges through every chart without a single slide. They lean forward. Kabir just stares.",
+      },
+      {
+        id: "hesaves",
+        label: "Let him take over",
+        spark: 1,
+        reply: `Kabir already has the backup drive open. "Relax, Sunshine. I've got this."`,
+      },
+      {
+        id: "together",
+        label: "Split it: you tell the story, he takes the numbers",
+        spark: 2,
+        self: 1,
+        reply: `"You take the numbers, I'll take the story." "...Deal."`,
+      },
     ],
   },
   {
@@ -111,13 +216,30 @@ export const SCENES: Scene[] = [
     location: "A call you can't dodge",
     dialogue: [
       "Your phone rings. Chaitanya, obviously.",
-      `"Listen," she says, no hello. "You deserve the whole bookstore. Do NOT settle for a bookmark."`,
+      `Chaitanya: "Listen," she says, no hello. "You deserve the whole bookstore. Do NOT settle for a bookmark."`,
       "You can hear her pacing on the other end.",
     ],
+    prompt: "She's waiting for your answer. What do you tell her?",
     choices: [
-      { id: "agree", label: '"You\'re right"', self: 2 },
-      { id: "different", label: '"But he\'s different 🥺"', spark: 3 },
-      { id: "hanging", label: '"Hang up, he\'s here"', spark: 2, self: 1 },
+      {
+        id: "agree",
+        label: '"You\'re right."',
+        self: 2,
+        reply: `Chaitanya: "Thank you. The whole bookstore, Jas. Now go be iconic."`,
+      },
+      {
+        id: "different",
+        label: '"But he\'s different 🥺"',
+        spark: 3,
+        reply: `Chaitanya: "Ugh. Fine. But I'm watching you."`,
+      },
+      {
+        id: "hanging",
+        label: '"Hang up, he\'s here."',
+        spark: 2,
+        self: 1,
+        reply: `Chaitanya: "GO. Text me everything at 3 AM."`,
+      },
     ],
   },
   {
@@ -125,14 +247,31 @@ export const SCENES: Scene[] = [
     heading: "Results Day",
     location: "Outside the results hall",
     dialogue: [
-      "You won. Both of you, the whole team, but somehow it's him standing in front of you with a book in his hands.",
-      "His favourite one. Every line he loved is underlined — and every single one of them, somehow, is about you.",
+      "You won. The whole team did, but somehow it's him standing in front of you with a book in his hands.",
+      "His favourite one. Every line he loved is underlined, and every single one of them, somehow, is about you.",
       `"Didn't say it was yours," he mutters. "Just said it reminded me of someone."`,
     ],
+    prompt: "He's handing you the book. How do you react?",
     choices: [
-      { id: "readnow", label: "Read it in front of him", spark: 3 },
-      { id: "readlater", label: "Keep it to read alone later", self: 2 },
-      { id: "askwhy", label: "Ask him why every line is about her", spark: 2, self: 1 },
+      {
+        id: "readnow",
+        label: "Read the first underline out loud",
+        spark: 3,
+        reply: `You read the first underlined line out loud. Kabir goes very still. "I didn't say you should read it out loud."`,
+      },
+      {
+        id: "readlater",
+        label: "Keep it to read alone later",
+        self: 2,
+        reply: "You tuck it into your bag. Later, alone, you read every underline twice.",
+      },
+      {
+        id: "askwhy",
+        label: "Ask him why every line is about you",
+        spark: 2,
+        self: 1,
+        reply: `"Because I'm an idiot," he says. "Obviously." Then, quieter: "...and not as much of one as I was pretending to be."`,
+      },
     ],
   },
 ];

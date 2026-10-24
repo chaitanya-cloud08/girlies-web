@@ -20,6 +20,7 @@ export default function CaseStudyLove({ slug, nickname, color, unlocked }: { slu
   const [sceneIndex, setSceneIndex] = useState(0);
   const [totals, setTotals] = useState<Totals>(emptyTotals());
   const [sessionUnlocked, setSessionUnlocked] = useState<string[]>(unlocked);
+  const [picked, setPicked] = useState<Choice | null>(null);
 
   const scene = SCENES[sceneIndex];
   const cast = SCENE_CAST[scene?.id] ?? "both";
@@ -28,13 +29,21 @@ export default function CaseStudyLove({ slug, nickname, color, unlocked }: { slu
   function start() {
     setSceneIndex(0);
     setTotals(emptyTotals());
+    setPicked(null);
     setView({ kind: "scene" });
     playSound("soft");
   }
 
-  function choose(choice: Choice) {
-    const next = applyChoice(totals, choice);
+  function pick(choice: Choice) {
+    if (picked) return;
+    setPicked(choice);
     playSound("pop");
+  }
+
+  function continueStory() {
+    if (!picked) return;
+    const next = applyChoice(totals, picked);
+    setPicked(null);
     if (sceneIndex + 1 >= SCENES.length) {
       const ending = resolveEnding(next);
       setTotals(next);
@@ -138,7 +147,6 @@ export default function CaseStudyLove({ slug, nickname, color, unlocked }: { slu
         {cast === "chat" && (
           <div className="scene-phone">
             <ChaitanyaContact className="scene-contact" />
-            <div className="chat-bubble hand">{scene.dialogue[scene.dialogue.length - 1]}</div>
           </div>
         )}
         {cast === "call" && (
@@ -150,20 +158,35 @@ export default function CaseStudyLove({ slug, nickname, color, unlocked }: { slu
       </div>
 
       <div className="scene-dialogue">
-        {(cast === "both" ? scene.dialogue : scene.dialogue.slice(0, -1)).map((line, i) => (
+        {scene.dialogue.map((line, i) => (
           <p key={i} style={{ animationDelay: `${i * 0.12}s` }}>
             {line}
           </p>
         ))}
       </div>
 
-      <div className="scene-choices">
-        {scene.choices.map((c) => (
-          <button key={c.id} className="btn btn-ghost scene-choice" onClick={() => choose(c)} data-pop="soft">
-            {c.label}
+      {!picked && (
+        <>
+          <p className="scene-prompt">{scene.prompt}</p>
+          <div className="scene-choices">
+            {scene.choices.map((c) => (
+              <button key={c.id} className="btn btn-ghost scene-choice" onClick={() => pick(c)} data-pop="soft">
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {picked && (
+        <div className="scene-reply-wrap">
+          <p className="scene-reply-label tiny muted">you said: {picked.label}</p>
+          <p className="scene-reply hand">{picked.reply}</p>
+          <button className="btn btn-primary" onClick={continueStory} data-pop>
+            {sceneIndex + 1 >= SCENES.length ? "See how it ends →" : "Next →"}
           </button>
-        ))}
-      </div>
+        </div>
+      )}
 
       <Link href={`/g/${slug}`} className="link-btn">
         ← Leave the case study

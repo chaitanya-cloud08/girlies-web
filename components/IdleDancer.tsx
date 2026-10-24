@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, cloneElement, isValidElement, type ReactElement } from "react";
 
-/** Swaps "bob" for "dance" on the child's className after ~20s of no interaction. */
+/** Swaps "bob" for "dance" on the child's className after idleMs without interaction. */
 export default function IdleDancer({
   children,
   enabled,
@@ -12,21 +12,25 @@ export default function IdleDancer({
   idleMs?: number;
 }) {
   const [dancing, setDancing] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastActive = useRef(0);
 
   useEffect(() => {
     if (!enabled) return;
-    function reset() {
-      setDancing(false);
-      if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(() => setDancing(true), idleMs);
-    }
-    reset();
+    lastActive.current = Date.now();
+    // Activity only stamps a timestamp; a single slow check decides when to dance.
+    // This keeps pointer movement free of state updates and timers.
+    const stamp = () => {
+      lastActive.current = Date.now();
+    };
     const events: (keyof WindowEventMap)[] = ["pointermove", "keydown", "click", "scroll", "touchstart"];
-    events.forEach((e) => window.addEventListener(e, reset));
+    events.forEach((e) => window.addEventListener(e, stamp, { passive: true }));
+    const check = setInterval(() => {
+      setDancing(Date.now() - lastActive.current >= idleMs);
+    }, 1000);
     return () => {
-      events.forEach((e) => window.removeEventListener(e, reset));
-      if (timer.current) clearTimeout(timer.current);
+      events.forEach((e) => window.removeEventListener(e, stamp));
+      clearInterval(check);
+      setDancing(false);
     };
   }, [enabled, idleMs]);
 

@@ -99,6 +99,11 @@ export default async function SpaceHome({ params }: { params: Promise<{ slug: st
             <p>{content.game.teaser}</p>
           </Link>
         )}
+        <Link href="/kalesh" className="tile tile-kalesh" data-pop>
+          <span className="tile-icon" aria-hidden>🔥</span>
+          <h2>Kalesh HQ</h2>
+          <p>The whole group in one place: Wrapped and our polaroid</p>
+        </Link>
       </section>
     </>
   );

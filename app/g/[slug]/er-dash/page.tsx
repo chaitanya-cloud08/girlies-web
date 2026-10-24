@@ -18,7 +18,7 @@ export default async function ErDashPage({ params }: { params: Promise<{ slug: s
       <header className="page-head">
         <p className="eyebrow">her clinic</p>
         <h1 className="display">Dr. P&rsquo;s ER Dash</h1>
-        <p className="muted">Three shifts. Total chaos. She&rsquo;s never once rattled.</p>
+        <p className="muted">Two rounds. Total chaos. She&rsquo;s never once rattled.</p>
       </header>
       <ErDash slug={slug} nickname={content.nickname} title={content.title} color={content.color} best={best} />
     </>

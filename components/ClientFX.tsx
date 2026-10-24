@@ -105,11 +105,13 @@ export default function ClientFX() {
     if (!window.matchMedia("(pointer: fine)").matches) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let last = 0;
+    let alive = 0;
     const glyphs = ["✦", "✧", "♡", "⋆"];
     function move(e: PointerEvent) {
       const now = performance.now();
-      if (now - last < 45) return;
+      if (now - last < 90 || alive >= 10) return;
       last = now;
+      alive++;
       const s = document.createElement("span");
       s.className = "sparkle";
       s.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
@@ -117,7 +119,10 @@ export default function ClientFX() {
       s.style.top = `${e.clientY}px`;
       s.style.setProperty("--dx", `${(Math.random() - 0.5) * 30}px`);
       document.body.appendChild(s);
-      setTimeout(() => s.remove(), 750);
+      setTimeout(() => {
+        s.remove();
+        alive--;
+      }, 750);
     }
     window.addEventListener("pointermove", move);
     return () => window.removeEventListener("pointermove", move);

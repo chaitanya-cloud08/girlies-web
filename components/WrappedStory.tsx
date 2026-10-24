@@ -64,26 +64,9 @@ export default function WrappedStory() {
   const router = useRouter();
   const canvasTransform = useCanvasTransform();
   const [index, setIndex] = useState(0);
-  const [yapCount, setYapCount] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const slideId = SLIDES[index];
-
-  useEffect(() => {
-    if (slideId !== "yapping") return;
-    setYapCount(0);
-    const start = performance.now();
-    const dur = 1800;
-    let raf: number;
-    function tick(now: number) {
-      const t = Math.min(1, (now - start) / dur);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setYapCount(Math.round(eased * YAPPING_MINUTES));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    }
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [slideId]);
 
   function go(delta: number) {
     setIndex((i) => Math.max(0, Math.min(SLIDES.length - 1, i + delta)));
@@ -203,7 +186,7 @@ export default function WrappedStory() {
           onTouchEnd={onTouchEnd}
         >
           {slideId === "intro" && <IntroSlide />}
-          {slideId === "yapping" && <YappingSlide count={yapCount} />}
+          {slideId === "yapping" && <YappingSlide />}
           {slideId === "teaser" && <TeaserSlide />}
           {(slideId === "shruti" || slideId === "jasbir" || slideId === "pranjali") && (
             <PersonaSlide key={slideId} slug={slideId} onTapSong={openSpotify} />
@@ -254,8 +237,23 @@ function IntroSlide() {
   );
 }
 
-function YappingSlide({ count }: { count: number }) {
+function YappingSlide() {
+  const [count, setCount] = useState(0);
   const shaking = count > 0 && count < YAPPING_MINUTES;
+
+  useEffect(() => {
+    const start = performance.now();
+    const dur = 1800;
+    let raf: number;
+    function tick(now: number) {
+      const t = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setCount(Math.round(eased * YAPPING_MINUTES));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
   return (
     <div className="wrapped-slide wrapped-slide-yapping">
       <div className="wrapped-sirens" aria-hidden>

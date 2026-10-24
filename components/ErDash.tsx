@@ -14,6 +14,8 @@ import {
   POINTS_VIP,
   CHILL_MS,
   BADGE_SCORE,
+  shuffle,
+  type PatientTemplate,
   type RoomId,
 } from "@/lib/er-dash";
 import { saveErDashScore } from "@/app/actions";
@@ -23,6 +25,7 @@ import { playSound } from "./ClientFX";
 type Patient = { id: string; complaint: string; room: RoomId | "any"; vip: boolean; remainingMs: number; maxMs: number };
 type ShiftState = {
   waiting: Patient[];
+  queue: PatientTemplate[];
   spawnedCount: number;
   spawnAcc: number;
   selectedId: string | null;
@@ -33,23 +36,27 @@ type ShiftState = {
 };
 type Phase = "intro" | "playing" | "interstitial" | "result";
 
-function pickTemplate(spawned: number, vipSlot: number) {
-  if (spawned === vipSlot) return VIP_PATIENT;
-  const idx = spawned > vipSlot ? spawned - 1 : spawned;
-  return PATIENT_TEMPLATES[idx % PATIENT_TEMPLATES.length];
+// Each round takes its own slice of one shuffled deck, with the VIP at a fixed slot.
+function buildQueue(deck: PatientTemplate[], index: number, total: number): PatientTemplate[] {
+  const regularPerRound = total - 1;
+  const regs = deck.slice(index * regularPerRound, (index + 1) * regularPerRound);
+  const vipSlot = Math.floor(total / 2);
+  return [...regs.slice(0, vipSlot), VIP_PATIENT, ...regs.slice(vipSlot)];
 }
 
 export default function ErDash({ slug, nickname, title, color, best }: { slug: string; nickname: string; title: string; color: string; best: { score: number; badge: boolean } }) {
   const [phase, setPhase] = useState<Phase>("intro");
   const [shiftIndex, setShiftIndex] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
+  const [runDeck, setRunDeck] = useState<PatientTemplate[]>([]);
   const [shift, setShift] = useState<ShiftState | null>(null);
   const [interstitialText, setInterstitialText] = useState("");
   const [finalResult, setFinalResult] = useState<{ score: number; badge: boolean } | null>(null);
 
-  function startShift(index: number) {
+  function startShift(index: number, deck: PatientTemplate[]) {
     setShift({
       waiting: [],
+      queue: buildQueue(deck, index, SHIFTS[index].totalPatients),
       spawnedCount: 0,
       spawnAcc: SHIFTS[index].spawnMs * 0.5,
       selectedId: null,
@@ -58,6 +65,7 @@ export default function ErDash({ slug, nickname, title, color, best }: { slug: s
       chillRemaining: 0,
       feedback: null,
     });
+    setRunDeck(deck);
     setShiftIndex(index);
     setPhase("playing");
   }
@@ -93,8 +101,7 @@ export default function ErDash({ slug, nickname, title, color, best }: { slug: s
         let spawned = prev.spawnedCount;
         if (spawnAcc >= cfg.spawnMs && nextWaiting.length < cfg.maxWaiting && spawned < cfg.totalPatients) {
           spawnAcc = 0;
-          const vipSlot = Math.floor(cfg.totalPatients / 2);
-          const tpl = pickTemplate(spawned, vipSlot);
+          const tpl = prev.queue[spawned];
           nextWaiting.push({
             id: `p${spawned}`,
             complaint: tpl.complaint,
@@ -164,7 +171,7 @@ export default function ErDash({ slug, nickname, title, color, best }: { slug: s
 
   function interstitialContinue() {
     if (shiftIndex < SHIFTS.length - 1) {
-      startShift(shiftIndex + 1);
+      startShift(shiftIndex + 1, runDeck);
     } else {
       const badge = totalScore >= BADGE_SCORE;
       saveErDashScore(slug, totalScore, badge).catch(() => {});
@@ -188,13 +195,13 @@ export default function ErDash({ slug, nickname, title, color, best }: { slug: s
           <DoctorOverlay />
         </div>
         <h2 className="display">Dr. P&rsquo;s ER Dash 🚑</h2>
-        <p className="muted">Chaos everywhere. She stays chill. Treat patients, save hearts, survive 3 shifts.</p>
+        <p className="muted">Chaos everywhere. She stays chill. Treat patients, save hearts, get through both rounds.</p>
         {best.score > 0 && (
           <p className="tiny muted">
             Best score: {best.score} {best.badge && "🥇"}
           </p>
         )}
-        <button className="btn btn-primary" onClick={() => startShift(0)} data-pop>
+        <button className="btn btn-primary" onClick={() => startShift(0, shuffle(PATIENT_TEMPLATES))} data-pop>
           Start Shift 1 — Calm Morning
         </button>
       </div>
@@ -218,8 +225,9 @@ export default function ErDash({ slug, nickname, title, color, best }: { slug: s
     return (
       <div className="erdash-result">
         <h2 className="display">{title}, MBBS 🎓</h2>
-        <p className="muted">Three shifts down. Chaos everywhere, and she never once lost her cool.</p>
+        <p className="muted">Both rounds down. Chaos everywhere, and she never once lost her cool.</p>
         <p className="erdash-score">Final score: {finalResult.score}</p>
+        <p className="tiny muted">Every patient was a different one. Chaos, but curated.</p>
         {finalResult.badge && <p className="hand" style={{ fontSize: "1.3rem", color: "var(--accent-deep)" }}>🥇 Gold Stethoscope Badge earned!</p>}
         <div className="confirm-actions">
           <button
